@@ -64,7 +64,8 @@ const Login = ({ mode }) => {
   const {
     control,
     handleSubmit,
-    formState: { errors }
+    formState: { errors },
+    setError,
   } = useForm({
     resolver: valibotResolver(schema),
     defaultValues: {
@@ -109,6 +110,7 @@ const Login = ({ mode }) => {
 
     } catch (error) {
       console.error(error)
+      setErrorState('Failed to load user profile')
     }
   }
 
@@ -137,9 +139,11 @@ const Login = ({ mode }) => {
         console.log(data.message)
       } else {
         console.error('Error:', data.message)
+        setErrorState('Failed to update user reference')
       }
     } catch (error) {
       console.error('Error:', error)
+      setErrorState('Failed to update user reference')
     }
   }
 
@@ -173,7 +177,7 @@ const Login = ({ mode }) => {
 
       const userProfileInfo = await loadUserProfile(result.access_token)
 
-      await userRefc(data.email, data.password, userProfileInfo);
+      await userRefc(data.email, data.password, userProfileInfo)
 
       const res = await signIn('credentials', {
         email: data.email,
@@ -181,7 +185,7 @@ const Login = ({ mode }) => {
         redirect: false
       })
 
-      if (res && res.ok && res.error === null) {
+      if (res && res.ok && !res.error) {
         // Vars
         const redirectURL = searchParams.get('redirectTo') ?? '/'
 
@@ -195,7 +199,15 @@ const Login = ({ mode }) => {
       }
 
     } catch (error) {
-      setErrorState('Login failed. Please check your credentials and try again.')
+      setError("email", {
+        type: "manual",
+        message: "Don't forget, your email should be cool!",
+      })
+
+      setError("password", {
+        type: "manual",
+        message: "Don't forget, your password should be cool!",
+      })
     }
   }
 
@@ -207,10 +219,10 @@ const Login = ({ mode }) => {
   }, [router])
 
   return (
-    <div className='flex flex-col justify-center items-center min-bs-[100dvh] relative p-6'>
-      <Card className='flex flex-col sm:is-[450px]'>
+    <div className='flex flex-col justify-center items-center min-h-screen relative p-6'>
+      <Card className='flex flex-col sm:w-[450px]'>
         <CardContent className='!p-12'>
-          <div className='flex justify-center items-center gap-3 mbe-6'>
+          <div className='flex justify-center items-center gap-3 mb-6'>
             <Logo className='text-primary' height={28} width={35} />
             <Typography variant='h4' className='font-semibold tracking-[0.15px]'>
               {themeConfig.templateName}
@@ -219,7 +231,7 @@ const Login = ({ mode }) => {
           <div className='flex flex-col gap-5'>
             <div>
               <Typography variant='h4'>{`Welcome to ${themeConfig.templateName}!👋🏻`}</Typography>
-              <Typography className='mbs-1'>Please sign-in to your account and start the adventure</Typography>
+              <Typography className='mb-1'>Please sign in to your account and start the adventure</Typography>
             </div>
             <form noValidate autoComplete='off' onSubmit={handleSubmit(handleLogin)} className='flex flex-col gap-5'>
               {errorState && <Typography color='error'>{errorState}</Typography>}
